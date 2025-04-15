@@ -1,0 +1,18 @@
+body {
+    text-align: center;
+    font-family: Arial;
+    background-color: #f0f0f0;
+  }
+  canvas {
+    border: 1px solid #000;
+    margin-top: 10px;
+  }
+  button {
+    margin: 5px;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+  }
+  
