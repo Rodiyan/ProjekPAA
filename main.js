@@ -16,7 +16,6 @@ let frameCounter = 0;
 let lastPath = [];
 let imageInput = document.getElementById("imageInput");
 
-// Speed presets
 const speedPresets = {
   1: "Very Slow",
   3: "Slow",
@@ -29,9 +28,7 @@ const speedPresets = {
 
 function updateSpeed() {
   const slider = document.getElementById("speedSlider");
-  speedDelay = 16 - parseInt(slider.value); // Invert so higher values = faster
-  
-  // Update speed display
+  speedDelay = 16 - parseInt(slider.value);
   const speedValue = document.getElementById("speedValue");
   const presetValue = 16 - speedDelay;
   speedValue.textContent = speedPresets[presetValue] || "Custom";
@@ -123,14 +120,12 @@ function drawCourier() {
   const centerX = courier.x * GRID_SIZE + GRID_SIZE / 2;
   const centerY = courier.y * GRID_SIZE + GRID_SIZE / 2;
   const angle = courier.angle;
-  
-  // Draw courier body
+
   ctx.fillStyle = "#10b981";
   ctx.beginPath();
   ctx.arc(centerX, centerY, GRID_SIZE/3, 0, Math.PI * 2);
   ctx.fill();
-  
-  // Draw courier direction indicator
+
   ctx.fillStyle = "#047857";
   ctx.beginPath();
   ctx.moveTo(centerX + GRID_SIZE/3 * Math.cos(angle), centerY + GRID_SIZE/3 * Math.sin(angle));
@@ -143,12 +138,10 @@ function drawCourier() {
 function drawFlag(x, y, color) {
   const px = x * GRID_SIZE + GRID_SIZE / 2;
   const py = y * GRID_SIZE + GRID_SIZE / 2;
-  
-  // Draw flag pole
+
   ctx.fillStyle = "#4b5563";
   ctx.fillRect(px - 1, py - 12, 2, 24);
-  
-  // Draw flag
+
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(px + 1, py - 10);
@@ -156,8 +149,7 @@ function drawFlag(x, y, color) {
   ctx.lineTo(px + 1, py);
   ctx.closePath();
   ctx.fill();
-  
-  // Draw flag pole top
+
   ctx.fillStyle = "#1f2937";
   ctx.beginPath();
   ctx.arc(px, py - 12, 2, 0, Math.PI * 2);
@@ -167,30 +159,21 @@ function drawFlag(x, y, color) {
 function loop() {
   requestAnimationFrame(loop);
   drawGrid();
-  
-  // Draw path if exists
+
   if (lastPath.length > 0) {
     ctx.strokeStyle = "rgba(59, 130, 246, 0.5)";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(
-      start.x * GRID_SIZE + GRID_SIZE / 2,
-      start.y * GRID_SIZE + GRID_SIZE / 2
-    );
-    
+    ctx.moveTo(start.x * GRID_SIZE + GRID_SIZE / 2, start.y * GRID_SIZE + GRID_SIZE / 2);
     lastPath.forEach(point => {
-      ctx.lineTo(
-        point.x * GRID_SIZE + GRID_SIZE / 2,
-        point.y * GRID_SIZE + GRID_SIZE / 2
-      );
+      ctx.lineTo(point.x * GRID_SIZE + GRID_SIZE / 2, point.y * GRID_SIZE + GRID_SIZE / 2);
     });
-    
     ctx.stroke();
   }
-  
+
   if (start) drawFlag(start.x, start.y, "#f59e0b");
   if (destination) drawFlag(destination.x, destination.y, "#ef4444");
-  
+
   if (moving && courier.path.length > 0) {
     frameCounter++;
     if (frameCounter >= speedDelay) {
@@ -203,6 +186,7 @@ function loop() {
       frameCounter = 0;
     }
   }
+
   drawCourier();
 }
 loop();
@@ -226,7 +210,7 @@ function loadMap() {
       for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
           const index = (y * COLS + x) * 4;
-          const brightness = imageData[index]; // grayscale
+          const brightness = imageData[index];
           grid[y][x] = brightness < 128 ? 0 : 1;
         }
       }
@@ -275,9 +259,4 @@ function replayCourier() {
   updateStatus("running");
 }
 
-function startGame() {
-  alert("Hide & Seek functionality will be implemented here");
-}
-
-// Initialize
 updateSpeed();

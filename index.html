@@ -15,7 +15,6 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       border-radius: 0.5rem;
     }
-    
     .speed-slider {
       -webkit-appearance: none;
       width: 100%;
@@ -24,7 +23,6 @@
       background: #e5e7eb;
       outline: none;
     }
-    
     .speed-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -34,7 +32,6 @@
       background: #3b82f6;
       cursor: pointer;
     }
-    
     .speed-slider::-moz-range-thumb {
       width: 20px;
       height: 20px;
@@ -42,7 +39,6 @@
       background: #3b82f6;
       cursor: pointer;
     }
-    
     .courier-indicator {
       width: 16px;
       height: 16px;
@@ -52,22 +48,11 @@
       margin-right: 8px;
       animation: pulse 1.5s infinite;
     }
-    
     @keyframes pulse {
-      0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-      }
-      70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-      }
-      100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-      }
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
-    
     .status-badge {
       padding: 0.25rem 0.5rem;
       border-radius: 9999px;
@@ -89,7 +74,6 @@
     </header>
 
     <div class="flex flex-col lg:flex-row gap-8">
-      <!-- Main canvas area -->
       <div class="flex-1">
         <div class="bg-white rounded-lg shadow-md p-4">
           <div class="flex justify-between items-center mb-4">
@@ -105,7 +89,6 @@
         </div>
       </div>
 
-      <!-- Control panel -->
       <div class="w-full lg:w-80">
         <div class="bg-white rounded-lg shadow-md p-6 space-y-6">
           <div>
@@ -119,88 +102,53 @@
                   <i class="fas fa-map text-blue-500 mr-1"></i>
                   Map Image
                 </label>
-                <input type="file" id="imageInput" accept="image/*" class="block w-full text-sm text-gray-500
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100">
+                <input type="file" id="imageInput" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
               </div>
-
               <div class="grid grid-cols-2 gap-2">
-                <button onclick="loadMap()" class="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                  <i class="fas fa-upload mr-2"></i>
-                  Load Map
+                <button onclick="loadMap()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                  <i class="fas fa-upload mr-2"></i> Load Map
                 </button>
-                <button onclick="randomize()" class="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
-                  <i class="fas fa-random mr-2"></i>
-                  Randomize
+                <button onclick="randomize()" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+                  <i class="fas fa-random mr-2"></i> Randomize
                 </button>
               </div>
-
               <div class="grid grid-cols-3 gap-2">
-                <button onclick="startCourier()" id="startBtn" class="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
-                  <i class="fas fa-play mr-2"></i>
-                  Start
+                <button onclick="startCourier()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                  <i class="fas fa-play mr-2"></i> Start
                 </button>
-                <button onclick="pauseCourier()" id="pauseBtn" class="flex items-center justify-center px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition">
-                  <i class="fas fa-pause mr-2"></i>
-                  Pause
+                <button onclick="pauseCourier()" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition">
+                  <i class="fas fa-pause mr-2"></i> Pause
                 </button>
-                <button onclick="replayCourier()" class="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
-                  <i class="fas fa-redo mr-2"></i>
-                  Replay
+                <button onclick="replayCourier()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+                  <i class="fas fa-redo mr-2"></i> Replay
                 </button>
               </div>
-
-              <button onclick="startGame()" class="w-full flex items-center justify-center px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition">
-                <i class="fas fa-gamepad mr-2"></i>
-                Hide & Seek
-              </button>
             </div>
           </div>
-
           <div class="border-t border-gray-200 pt-4">
             <h3 class="text-lg font-medium text-gray-900 mb-4">
-              <i class="fas fa-tachometer-alt text-blue-500 mr-2"></i>
-              Speed Settings
+              <i class="fas fa-tachometer-alt text-blue-500 mr-2"></i> Speed Settings
             </h3>
             <div class="space-y-2">
               <div class="flex justify-between items-center">
-                <label class="text-sm font-medium text-gray-700">
-                  Courier Speed
-                </label>
+                <label class="text-sm font-medium text-gray-700">Courier Speed</label>
                 <span id="speedValue" class="text-sm font-medium text-gray-900">Medium</span>
               </div>
               <input type="range" min="1" max="15" value="8" class="speed-slider" id="speedSlider" oninput="updateSpeed()">
               <div class="flex justify-between text-xs text-gray-500">
-                <span>Slow</span>
-                <span>Fast</span>
+                <span>Slow</span><span>Fast</span>
               </div>
             </div>
           </div>
-
           <div class="border-t border-gray-200 pt-4">
             <h3 class="text-lg font-medium text-gray-900 mb-2">
-              <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-              Simulation Info
+              <i class="fas fa-info-circle text-blue-500 mr-2"></i> Simulation Info
             </h3>
             <div class="text-sm text-gray-600 space-y-2">
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>
-                <span>Start Position</span>
-              </div>
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                <span>Destination</span>
-              </div>
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                <span>Courier</span>
-              </div>
-              <div class="pt-2">
-                <p>Path length: <span id="pathLength" class="font-medium">0</span> steps</p>
-              </div>
+              <div class="flex items-center"><div class="w-4 h-4 bg-yellow-500 rounded-full mr-2"></div>Start Position</div>
+              <div class="flex items-center"><div class="w-4 h-4 bg-red-500 rounded-full mr-2"></div>Destination</div>
+              <div class="flex items-center"><div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>Courier</div>
+              <div class="pt-2"><p>Path length: <span id="pathLength" class="font-medium">0</span> steps</p></div>
             </div>
           </div>
         </div>
@@ -208,6 +156,7 @@
     </div>
   </div>
 
+  <!-- Pemanggilan JavaScript eksternal -->
   <script src="main.js"></script>
 </body>
 </html>
