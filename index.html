@@ -105,21 +105,21 @@
                 <input type="file" id="imageInput" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
               </div>
               <div class="grid grid-cols-2 gap-2">
-                <button onclick="loadMap()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                <button id="loadMapBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                   <i class="fas fa-upload mr-2"></i> Load Map
                 </button>
-                <button onclick="randomize()" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+                <button id="randomizeBtn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
                   <i class="fas fa-random mr-2"></i> Randomize
                 </button>
               </div>
               <div class="grid grid-cols-3 gap-2">
-                <button onclick="startCourier()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                <button id="startBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
                   <i class="fas fa-play mr-2"></i> Start
                 </button>
-                <button onclick="pauseCourier()" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition">
+                <button id="pauseBtn" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition">
                   <i class="fas fa-pause mr-2"></i> Pause
                 </button>
-                <button onclick="replayCourier()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+                <button id="replayBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
                   <i class="fas fa-redo mr-2"></i> Replay
                 </button>
               </div>
@@ -134,7 +134,7 @@
                 <label class="text-sm font-medium text-gray-700">Courier Speed</label>
                 <span id="speedValue" class="text-sm font-medium text-gray-900">Medium</span>
               </div>
-              <input type="range" min="1" max="15" value="8" class="speed-slider" id="speedSlider" oninput="updateSpeed()">
+              <input type="range" min="1" max="15" value="8" class="speed-slider" id="speedSlider">
               <div class="flex justify-between text-xs text-gray-500">
                 <span>Slow</span><span>Fast</span>
               </div>
@@ -156,7 +156,6 @@
     </div>
   </div>
 
-  <!-- Pemanggilan JavaScript eksternal -->
   <script src="main.js"></script>
 </body>
 </html>
