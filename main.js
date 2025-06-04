@@ -1,10 +1,13 @@
+// Canvas setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Constants
 const GRID_SIZE = 20;
 const COLS = canvas.width / GRID_SIZE;
 const ROWS = canvas.height / GRID_SIZE;
 
+// Game state
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(1));
 let start = null;
 let destination = null;
@@ -14,8 +17,18 @@ let moving = false;
 let speedDelay = 8;
 let frameCounter = 0;
 let lastPath = [];
-let imageInput = document.getElementById("imageInput");
+let loadedImage = null;
 
+// DOM elements
+const imageInput = document.getElementById("imageInput");
+const loadMapBtn = document.getElementById("loadMapBtn");
+const randomizeBtn = document.getElementById("randomizeBtn");
+const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const replayBtn = document.getElementById("replayBtn");
+const speedSlider = document.getElementById("speedSlider");
+
+// Speed presets
 const speedPresets = {
   1: "Very Slow",
   3: "Slow",
@@ -26,9 +39,20 @@ const speedPresets = {
   15: "Extreme"
 };
 
+// Event listeners
+loadMapBtn.addEventListener("click", loadMap);
+randomizeBtn.addEventListener("click", randomize);
+startBtn.addEventListener("click", startCourier);
+pauseBtn.addEventListener("click", pauseCourier);
+replayBtn.addEventListener("click", replayCourier);
+speedSlider.addEventListener("input", updateSpeed);
+
+// Initialize
+updateSpeed();
+
+// Functions
 function updateSpeed() {
-  const slider = document.getElementById("speedSlider");
-  speedDelay = 16 - parseInt(slider.value);
+  speedDelay = 16 - parseInt(speedSlider.value);
   const speedValue = document.getElementById("speedValue");
   const presetValue = 16 - speedDelay;
   speedValue.textContent = speedPresets[presetValue] || "Custom";
@@ -50,24 +74,51 @@ function updateStatus(status) {
 }
 
 function drawGrid() {
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      ctx.fillStyle = grid[y][x] === 1 ? "#fff" : "#f3f4f6";
-      ctx.fillRect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-      ctx.strokeStyle = "#e5e7eb";
-      ctx.strokeRect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+  if (loadedImage) {
+    ctx.drawImage(loadedImage, 0, 0, canvas.width, canvas.height);
+  } else {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        ctx.fillStyle = grid[y][x] === 1 ? "#fff" : "#f3f4f6";
+        ctx.fillRect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.strokeRect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+      }
     }
   }
 }
 
+function getPixelColor(x, y) {
+  const pixel = ctx.getImageData(x * GRID_SIZE + 1, y * GRID_SIZE + 1, 1, 1).data;
+  return { r: pixel[0], g: pixel[1], b: pixel[2] };
+}
+
+function isValidPosition(x, y) {
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return false;
+  const { r, g, b } = getPixelColor(x, y);
+  return (
+    r >= 90 && r <= 150 &&
+    g >= 90 && g <= 150 &&
+    b >= 90 && b <= 150 &&
+    Math.abs(r - g) < 5 && 
+    Math.abs(g - b) < 5
+  );
+}
+
 function randomPosition() {
-  const roads = [];
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      if (grid[y][x] === 0) roads.push({ x, y });
+  const validPositions = [];
+  for (let y = 1; y < ROWS - 1; y++) {
+    for (let x = 1; x < COLS - 1; x++) {
+      if (isValidPosition(x, y)) {
+        validPositions.push({ x, y });
+      }
     }
   }
-  return roads.length ? roads[Math.floor(Math.random() * roads.length)] : { x: 0, y: 0 };
+  if (validPositions.length === 0) {
+    alert("No valid gray area found (RGB range: 90-150). Please load a proper map.");
+    return null;
+  }
+  return validPositions[Math.floor(Math.random() * validPositions.length)];
 }
 
 function heuristic(a, b) {
@@ -75,6 +126,8 @@ function heuristic(a, b) {
 }
 
 function aStar(start, goal) {
+  if (!start || !goal) return [];
+  
   const openSet = [start];
   const cameFrom = {};
   const gScore = { [`${start.x},${start.y}`]: 0 };
@@ -96,11 +149,7 @@ function aStar(start, goal) {
 
     for (let [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
       const neighbor = { x: current.x + dx, y: current.y + dy };
-      if (
-        neighbor.x >= 0 && neighbor.x < COLS &&
-        neighbor.y >= 0 && neighbor.y < ROWS &&
-        grid[neighbor.y][neighbor.x] === 0
-      ) {
+      if (isValidPosition(neighbor.x, neighbor.y)) {
         const tentativeG = gScore[`${current.x},${current.y}`] + 1;
         if (
           !(`${neighbor.x},${neighbor.y}` in gScore) ||
@@ -177,12 +226,19 @@ function loop() {
   if (moving && courier.path.length > 0) {
     frameCounter++;
     if (frameCounter >= speedDelay) {
-      const next = courier.path.shift();
-      const dx = next.x - courier.x;
-      const dy = next.y - courier.y;
-      courier.angle = Math.atan2(dy, dx);
-      courier.x = next.x;
-      courier.y = next.y;
+      const next = courier.path[0];
+      if (isValidPosition(next.x, next.y)) {
+        courier.path.shift();
+        const dx = next.x - courier.x;
+        const dy = next.y - courier.y;
+        courier.angle = Math.atan2(dy, dx);
+        courier.x = next.x;
+        courier.y = next.y;
+      } else {
+        moving = false;
+        updateStatus("paused");
+        alert("WARNING! Courier hit an obstacle at position (" + next.x + "," + next.y + ")");
+      }
       frameCounter = 0;
     }
   }
@@ -210,10 +266,22 @@ function loadMap() {
       for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
           const index = (y * COLS + x) * 4;
-          const brightness = imageData[index];
-          grid[y][x] = brightness < 128 ? 0 : 1;
+          const r = imageData[index];
+          const g = imageData[index + 1];
+          const b = imageData[index + 2];
+          
+          const isGray = (
+            r >= 90 && r <= 150 &&
+            g >= 90 && g <= 150 &&
+            b >= 90 && b <= 150 &&
+            Math.abs(r - g) < 5 && 
+            Math.abs(g - b) < 5
+          );
+          
+          grid[y][x] = isGray ? 0 : 1;
         }
       }
+      loadedImage = img;
       alert("Map loaded successfully! Now randomize positions or set them manually.");
     };
     img.src = e.target.result;
@@ -258,5 +326,3 @@ function replayCourier() {
   moving = true;
   updateStatus("running");
 }
-
-updateSpeed();
