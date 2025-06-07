@@ -10,10 +10,10 @@ const ROWS = canvas.height / GRID_SIZE;
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(1));
 let start = null, destination = null, path = [];
 let courier = { x: 0, y: 0, path: [], angle: 0 };
-let moving = false, speedDelay = 8, frameCounter = 0, lastPath = [];
+let moving = false, paused = false, speedDelay = 8, frameCounter = 0, lastPath = [];
 let loadedImage = null;
 
-// UI
+// DOM Elements
 const imageInput = document.getElementById("imageInput");
 const loadMapBtn = document.getElementById("loadMapBtn");
 const randomizeBtn = document.getElementById("randomizeBtn");
@@ -27,7 +27,6 @@ const speedPresets = {
   8: "Medium", 10: "Fast", 12: "Very Fast", 15: "Extreme"
 };
 
-// Event bindings
 loadMapBtn.addEventListener("click", loadMap);
 randomizeBtn.addEventListener("click", randomize);
 startBtn.addEventListener("click", startCourier);
@@ -36,7 +35,6 @@ replayBtn.addEventListener("click", replayCourier);
 speedSlider.addEventListener("input", updateSpeed);
 updateSpeed();
 
-// Validasi posisi hanya dari grid
 function isValidPosition(x, y) {
   return x >= 0 && x < COLS && y >= 0 && y < ROWS && grid[y][x] === 0;
 }
@@ -45,7 +43,6 @@ function isPathValid(path) {
   return path.length > 0 && path.every(p => isValidPosition(p.x, p.y));
 }
 
-// Load dan parsing peta
 function loadMap() {
   const file = imageInput.files[0];
   if (!file) return alert("Pilih gambar peta terlebih dahulu.");
@@ -81,7 +78,6 @@ function loadMap() {
   reader.readAsDataURL(file);
 }
 
-// Heuristik dan A*
 function heuristic(a, b) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
@@ -123,7 +119,6 @@ function aStar(start, goal) {
   return [];
 }
 
-// Random posisi
 function randomPosition() {
   const valid = [];
   for (let y = 0; y < ROWS; y++) {
@@ -138,30 +133,58 @@ function randomize() {
   start = randomPosition();
   destination = randomPosition();
   path = aStar(start, destination);
+
   if (!isPathValid(path)) {
     alert("Jalur tidak valid, coba ulangi.");
     return;
   }
-  courier = { x: start.x, y: start.y, path: [...path], angle: 0 };
+
+  courier = {
+    x: start.x,
+    y: start.y,
+    path: [...path],
+    angle: 0
+  };
   lastPath = [...path];
+
   moving = false;
+  paused = true; // ✅ supaya bisa langsung tekan start tanpa klik pause dulu
   updateStatus("paused");
   updatePathLength();
 }
 
-// Courier control
 function startCourier() {
-  if (!start || !destination || !isPathValid(lastPath)) {
-    alert("Pastikan posisi valid dan jalur benar.");
+  if (!start || !destination) {
+    alert("Tentukan posisi awal dan tujuan terlebih dahulu!");
     return;
   }
-  courier.path = [...lastPath];
-  moving = true;
-  updateStatus("running");
+
+  if (paused && courier.path.length > 0) {
+    moving = true;
+    paused = false;
+    updateStatus("running");
+    return;
+  }
+
+  if (courier.path.length === 0 && lastPath.length > 0) {
+    courier = {
+      x: start.x,
+      y: start.y,
+      path: [...lastPath],
+      angle: 0
+    };
+    moving = true;
+    paused = false;
+    updateStatus("running");
+    return;
+  }
+
+  alert("Tidak ada jalur untuk dijalankan.");
 }
 
 function pauseCourier() {
   moving = false;
+  paused = true;
   updateStatus("paused");
 }
 
@@ -172,10 +195,10 @@ function replayCourier() {
   }
   courier = { x: start.x, y: start.y, path: [...lastPath], angle: 0 };
   moving = true;
+  paused = false;
   updateStatus("running");
 }
 
-// UI helper
 function updateSpeed() {
   speedDelay = 16 - parseInt(speedSlider.value);
   const preset = speedPresets[16 - speedDelay] || "Custom";
@@ -196,7 +219,6 @@ function updatePathLength() {
   document.getElementById("pathLength").textContent = lastPath.length;
 }
 
-// Render
 function drawCourier() {
   const cx = courier.x * GRID_SIZE + GRID_SIZE / 2;
   const cy = courier.y * GRID_SIZE + GRID_SIZE / 2;
@@ -270,8 +292,9 @@ function loop() {
         courier.y = next.y;
       } else {
         moving = false;
+        paused = false;
         updateStatus("paused");
-        alert("Kurir keluar jalur di (" + next.x + "," + next.y + ")");
+        alert(`Kurir keluar jalur di (${next.x}, ${next.y})`);
       }
       frameCounter = 0;
     }
