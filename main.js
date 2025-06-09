@@ -254,7 +254,7 @@ function updatePathLength() {
 function drawCourier() {
   const cx = courier.x * GRID_SIZE + GRID_SIZE / 2;
   const cy = courier.y * GRID_SIZE + GRID_SIZE / 2;
-  const size = GRID_SIZE;
+  const size = 25;
 
   if (!courierImage.complete) return;
 
