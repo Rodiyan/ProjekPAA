@@ -3,15 +3,21 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 
-const GRID_SIZE = 20;
+const GRID_SIZE = 5;
 const COLS = canvas.width / GRID_SIZE;
 const ROWS = canvas.height / GRID_SIZE;
 
 let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(1));
-let start = null, destination = null, path = [];
+let start = null, pickup = null, destination = null;
 let courier = { x: 0, y: 0, path: [], angle: 0 };
-let moving = false, paused = false, speedDelay = 8, frameCounter = 0, lastPath = [];
+let moving = false, paused = false, speedDelay = 8, frameCounter = 0;
 let loadedImage = null;
+let step = 1;
+let lastPath = [];
+let toPickupPath = [], toDestPath = [];
+
+let courierImage = new Image();
+courierImage.src = 'Kurir.png';
 
 // DOM Elements
 const imageInput = document.getElementById("imageInput");
@@ -64,9 +70,17 @@ function loadMap() {
           const py = Math.floor(y * GRID_SIZE + GRID_SIZE / 2);
           const idx = (py * tempCanvas.width + px) * 4;
           const r = imageData[idx], g = imageData[idx + 1], b = imageData[idx + 2];
-          const isGray = r >= 90 && r <= 150 && g >= 90 && g <= 150 && b >= 90 && b <= 150 &&
-                         Math.abs(r - g) < 5 && Math.abs(g - b) < 5;
-          grid[y][x] = isGray ? 0 : 1;
+          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const isGrayish = Math.abs(r - g) < 15 && Math.abs(g - b) < 15;
+const isLikelyRoad =
+  r >= 30 && r <= 150 &&
+  g >= 30 && g <= 150 &&
+  b >= 30 && b <= 150 &&
+  Math.abs(r - g) < 40 &&
+  Math.abs(g - b) < 40;
+
+grid[y][x] = isLikelyRoad ? 0 : 1;
+
         }
       }
 
@@ -131,10 +145,13 @@ function randomPosition() {
 
 function randomize() {
   start = randomPosition();
+  pickup = randomPosition();
   destination = randomPosition();
-  path = aStar(start, destination);
 
-  if (!isPathValid(path)) {
+  const toPickup = aStar(start, pickup);
+  const toDest = aStar(pickup, destination);
+
+  if (!isPathValid(toPickup) || !isPathValid(toDest)) {
     alert("Jalur tidak valid, coba ulangi.");
     return;
   }
@@ -142,20 +159,24 @@ function randomize() {
   courier = {
     x: start.x,
     y: start.y,
-    path: [...path],
+    path: [...toPickup],
     angle: 0
   };
-  lastPath = [...path];
 
+  toPickupPath = [...toPickup];
+  toDestPath = [...toDest];
+  lastPath = [...toPickup];
+
+  step = 1;
   moving = false;
-  paused = true; // ✅ supaya bisa langsung tekan start tanpa klik pause dulu
+  paused = true;
   updateStatus("paused");
   updatePathLength();
 }
 
 function startCourier() {
-  if (!start || !destination) {
-    alert("Tentukan posisi awal dan tujuan terlebih dahulu!");
+  if (!start || !pickup || !destination) {
+    alert("Tentukan titik awal, pickup, dan tujuan!");
     return;
   }
 
@@ -166,15 +187,16 @@ function startCourier() {
     return;
   }
 
-  if (courier.path.length === 0 && lastPath.length > 0) {
+  if (!moving && !paused && courier.path.length === 0 && toPickupPath.length > 0 && toDestPath.length > 0) {
     courier = {
       x: start.x,
       y: start.y,
-      path: [...lastPath],
+      path: [...toPickupPath],
       angle: 0
     };
+    lastPath = [...toPickupPath];
+    step = 1;
     moving = true;
-    paused = false;
     updateStatus("running");
     return;
   }
@@ -189,14 +211,24 @@ function pauseCourier() {
 }
 
 function replayCourier() {
-  if (!start || !destination || !isPathValid(lastPath)) {
-    alert("Jalur tidak valid untuk replay.");
+  if (!start || !pickup || !destination || toPickupPath.length === 0 || toDestPath.length === 0) {
+    alert("Tidak bisa replay. Jalur tidak tersedia.");
     return;
   }
-  courier = { x: start.x, y: start.y, path: [...lastPath], angle: 0 };
+
+  courier = {
+    x: start.x,
+    y: start.y,
+    path: [...toPickupPath],
+    angle: 0
+  };
+
+  lastPath = [...toPickupPath];
+  step = 1;
   moving = true;
   paused = false;
   updateStatus("running");
+  updatePathLength();
 }
 
 function updateSpeed() {
@@ -222,19 +254,15 @@ function updatePathLength() {
 function drawCourier() {
   const cx = courier.x * GRID_SIZE + GRID_SIZE / 2;
   const cy = courier.y * GRID_SIZE + GRID_SIZE / 2;
+  const size = GRID_SIZE;
 
-  ctx.fillStyle = "#10b981";
-  ctx.beginPath();
-  ctx.arc(cx, cy, GRID_SIZE / 3, 0, 2 * Math.PI);
-  ctx.fill();
+  if (!courierImage.complete) return;
 
-  ctx.fillStyle = "#047857";
-  ctx.beginPath();
-  ctx.moveTo(cx + GRID_SIZE / 3 * Math.cos(courier.angle), cy + GRID_SIZE / 3 * Math.sin(courier.angle));
-  ctx.lineTo(cx + GRID_SIZE / 4 * Math.cos(courier.angle + 2.4), cy + GRID_SIZE / 4 * Math.sin(courier.angle + 2.4));
-  ctx.lineTo(cx + GRID_SIZE / 4 * Math.cos(courier.angle - 2.4), cy + GRID_SIZE / 4 * Math.sin(courier.angle - 2.4));
-  ctx.closePath();
-  ctx.fill();
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(courier.angle - Math.PI / 2);
+  ctx.drawImage(courierImage, -size / 2, -size / 2, size, size);
+  ctx.restore();
 }
 
 function drawFlag(x, y, color) {
@@ -242,7 +270,6 @@ function drawFlag(x, y, color) {
   const py = y * GRID_SIZE + GRID_SIZE / 2;
   ctx.fillStyle = "#4b5563";
   ctx.fillRect(px - 1, py - 12, 2, 24);
-
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(px + 1, py - 10);
@@ -250,7 +277,6 @@ function drawFlag(x, y, color) {
   ctx.lineTo(px + 1, py);
   ctx.closePath();
   ctx.fill();
-
   ctx.fillStyle = "#1f2937";
   ctx.beginPath();
   ctx.arc(px, py - 12, 2, 0, Math.PI * 2);
@@ -258,28 +284,16 @@ function drawFlag(x, y, color) {
 }
 
 function drawGrid() {
-  if (loadedImage) {
-    ctx.drawImage(loadedImage, 0, 0, canvas.width, canvas.height);
-  }
+  if (loadedImage) ctx.drawImage(loadedImage, 0, 0, canvas.width, canvas.height);
 }
 
 function loop() {
   requestAnimationFrame(loop);
   drawGrid();
 
-  if (lastPath.length > 0) {
-    ctx.strokeStyle = "rgba(59, 130, 246, 0.5)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(start.x * GRID_SIZE + GRID_SIZE / 2, start.y * GRID_SIZE + GRID_SIZE / 2);
-    lastPath.forEach(p => {
-      ctx.lineTo(p.x * GRID_SIZE + GRID_SIZE / 2, p.y * GRID_SIZE + GRID_SIZE / 2);
-    });
-    ctx.stroke();
-  }
-
-  if (start) drawFlag(start.x, start.y, "#f59e0b");
-  if (destination) drawFlag(destination.x, destination.y, "#ef4444");
+  if (start) drawFlag(start.x, start.y, "#f59e0b");        // Start - Kuning
+  if (pickup) drawFlag(pickup.x, pickup.y, "#3b82f6");     // Pickup - Biru
+  if (destination) drawFlag(destination.x, destination.y, "#ef4444"); // Tujuan - Merah
 
   if (moving && courier.path.length > 0) {
     frameCounter++;
@@ -290,9 +304,23 @@ function loop() {
         courier.angle = Math.atan2(next.y - courier.y, next.x - courier.x);
         courier.x = next.x;
         courier.y = next.y;
+
+        if (courier.path.length === 0) {
+          if (step === 1) {
+            courier.path = [...toDestPath];
+            lastPath = [...toDestPath];
+            step = 2;
+          } else if (step === 2) {
+            moving = false;
+            paused = true;
+            courier.path = [];
+            updateStatus("paused");
+            alert("Kurir telah sampai ke tujuan!");
+          }
+        }
       } else {
         moving = false;
-        paused = false;
+        paused = true;
         updateStatus("paused");
         alert(`Kurir keluar jalur di (${next.x}, ${next.y})`);
       }
